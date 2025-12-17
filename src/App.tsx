@@ -7,7 +7,7 @@ import { PerformanceCharts } from '@/components/PerformanceCharts';
 import { BestWorstCampaigns } from '@/components/BestWorstCampaigns';
 import { parseCSV } from '@/lib/csvParser';
 import { calculateStats } from '@/lib/campaignStats';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 

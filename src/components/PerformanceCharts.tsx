@@ -47,23 +47,28 @@ export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
-            <ResponsiveContainer width="100%" height={300} minHeight={250}>
-              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 80 }}>
+            <ResponsiveContainer width="100%" height={400} minHeight={350}>
+              <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 150 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="name"
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={120}
                   fontSize={9}
                   interval={0}
+                  dy={10}
                 />
                 <YAxis tickFormatter={(value) => `£${value}`} fontSize={10} />
                 <Tooltip
                   formatter={(value: number) => formatCurrency(value)}
                   contentStyle={{ fontSize: '12px' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+                  verticalAlign="bottom"
+                  height={40}
+                />
                 <Bar dataKey="revenue" fill="#8884d8" name="Revenue" />
               </BarChart>
             </ResponsiveContainer>
@@ -77,23 +82,28 @@ export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
-            <ResponsiveContainer width="100%" height={300} minHeight={250}>
-              <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 80 }}>
+            <ResponsiveContainer width="100%" height={400} minHeight={350}>
+              <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 150 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="name"
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={120}
                   fontSize={9}
                   interval={0}
+                  dy={10}
                 />
                 <YAxis tickFormatter={(value) => `${value}%`} fontSize={10} />
                 <Tooltip
                   formatter={(value: number) => `${value.toFixed(2)}%`}
                   contentStyle={{ fontSize: '12px' }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}
+                  verticalAlign="bottom"
+                  height={40}
+                />
                 <Line
                   type="monotone"
                   dataKey="openRate"
