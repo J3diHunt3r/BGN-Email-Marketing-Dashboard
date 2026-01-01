@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Campaign } from '@/types/campaign';
 import {
   Table,
@@ -9,7 +10,8 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CampaignTableProps {
   campaigns: Campaign[];
@@ -17,7 +19,11 @@ interface CampaignTableProps {
   worstCampaign: Campaign | null;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function CampaignTable({ campaigns, bestCampaign, worstCampaign }: CampaignTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-GB', {
       style: 'currency',
@@ -36,6 +42,23 @@ export function CampaignTable({ campaigns, bestCampaign, worstCampaign }: Campai
 
   const isBest = (campaign: Campaign) => bestCampaign?.campaignId === campaign.campaignId;
   const isWorst = (campaign: Campaign) => worstCampaign?.campaignId === campaign.campaignId;
+
+  // Pagination
+  const totalPages = Math.ceil(campaigns.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedCampaigns = campaigns.slice(startIndex, endIndex);
+
+  // Reset to page 1 when campaigns change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [campaigns.length]);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <Card>
@@ -61,7 +84,7 @@ export function CampaignTable({ campaigns, bestCampaign, worstCampaign }: Campai
                 </TableRow>
               </TableHeader>
             <TableBody>
-              {campaigns.map((campaign) => (
+              {paginatedCampaigns.map((campaign) => (
                 <TableRow
                   key={campaign.campaignId}
                   className={isBest(campaign) ? 'bg-green-50 dark:bg-green-950/20' : isWorst(campaign) ? 'bg-red-50 dark:bg-red-950/20' : ''}
@@ -123,6 +146,63 @@ export function CampaignTable({ campaigns, bestCampaign, worstCampaign }: Campai
           </Table>
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-4 pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Showing {startIndex + 1} to {Math.min(endIndex, campaigns.length)} of {campaigns.length} campaigns
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    );
+                  })
+                  .map((page, index, array) => {
+                    // Add ellipsis if there's a gap
+                    const showEllipsisBefore = index > 0 && page - array[index - 1] > 1;
+                    return (
+                      <div key={page} className="flex items-center gap-1">
+                        {showEllipsisBefore && <span className="px-2">...</span>}
+                        <Button
+                          variant={currentPage === page ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => goToPage(page)}
+                          className="w-10"
+                        >
+                          {page}
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

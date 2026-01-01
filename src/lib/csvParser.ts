@@ -23,13 +23,84 @@ function parseData(data: any[]): Campaign[] {
       return isNaN(parsed) ? 0 : parsed;
     };
 
+    const parseDate = (value: any): string => {
+      if (!value && value !== 0) return '';
+      
+      // If it's already a string in the correct format (YYYY-MM-DD HH:MM:SS), return it
+      if (typeof value === 'string') {
+        // Check if it's already in the format we want
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+          return value;
+        }
+        // Try to parse the string as a date
+        const date = new Date(value);
+        if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          const seconds = String(date.getSeconds()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        return value; // Return as-is if we can't parse it
+      }
+      
+      // If it's a Date object
+      if (value instanceof Date) {
+        if (isNaN(value.getTime())) return '';
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        const hours = String(value.getHours()).padStart(2, '0');
+        const minutes = String(value.getMinutes()).padStart(2, '0');
+        const seconds = String(value.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      }
+      
+      // If it's a number (could be Excel serial date or Unix timestamp)
+      if (typeof value === 'number') {
+        // Excel serial dates are typically between 1 and 100000 (days since 1900)
+        // Unix timestamps are much larger (milliseconds since 1970)
+        if (value > 0 && value < 100000) {
+          // Likely Excel serial date: days since January 1, 1900
+          // Excel epoch is December 30, 1899 (not Jan 1, 1900 due to a bug)
+          const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+          const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+          if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+          }
+        } else {
+          // Likely Unix timestamp (milliseconds)
+          const date = new Date(value);
+          if (!isNaN(date.getTime()) && date.getFullYear() > 1900) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+          }
+        }
+      }
+      
+      return '';
+    };
+
     return {
       campaignName: getValue('Campaign Name') || '',
       variantName: getValue('Variant Name') || '',
       tags: getValue('Tags') || '',
       subject: getValue('Subject') || '',
       list: getValue('List') || '',
-      sendTime: getValue('Send Time') || '',
+      sendTime: parseDate(getValue('Send Time')),
       sendWeekday: getValue('Send Weekday') || '',
       totalRecipients: parseNumber(getValue('Total Recipients')),
       uniquePlacedOrder: parseNumber(getValue('Unique Placed Order')),
@@ -64,10 +135,19 @@ export function parseCSV(file: File): Promise<Campaign[]> {
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { 
+            type: 'array',
+            cellDates: false, // We'll handle dates manually
+            cellNF: false,
+            cellText: false
+          });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
+          // Use raw: true to get actual values (numbers, dates, etc.)
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+            raw: true, // Get raw values to handle dates properly
+            defval: '' // Default value for empty cells
+          });
           const campaigns = parseData(jsonData);
           resolve(campaigns);
         } catch (error) {

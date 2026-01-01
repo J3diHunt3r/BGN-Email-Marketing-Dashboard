@@ -18,6 +18,7 @@ interface PerformanceChartsProps {
 }
 
 export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
+  // Show only top 10 campaigns by revenue
   const chartData = campaigns
     .map((c) => ({
       name: c.campaignName.length > 30 
@@ -29,7 +30,8 @@ export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
       clickRate: c.clickRate,
       orderRate: c.placedOrderRate,
     }))
-    .sort((a, b) => b.revenue - a.revenue);
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-GB', {
@@ -43,7 +45,7 @@ export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base sm:text-lg">Revenue by Campaign</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Top 10 Revenue by Campaign</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
@@ -78,7 +80,7 @@ export function PerformanceCharts({ campaigns }: PerformanceChartsProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base sm:text-lg">Engagement Rates</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Top 10 Engagement Rates</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
